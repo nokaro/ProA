@@ -8,6 +8,6 @@
 </head>
 <body>
 이름:김효정
-github에 올리기 성공했음
+github에 올리기 성공했음s
 </body>
 </html>

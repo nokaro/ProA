@@ -55,8 +55,8 @@ table {
 		<c:forEach var="memberVo" items="${memberList}">
 			<tr>
 				<td>${memberVo.no}</td>
-				<td><a href='./update.do?no=${memberVo.no}'>${memberVo.name}</a></td>
-				<td>${memberVo.email}</td>
+				<td><a href='./detail.do?no=${memberVo.no}'>${memberVo.name}</a></td>
+				<td>${memberVo.email}</td> 
 				<td><fmt:formatDate value="${memberVo.createDate}"
 						pattern="YYYY-MM-dd hh:mm" />
 				</td>

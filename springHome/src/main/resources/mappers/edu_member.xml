@@ -96,4 +96,11 @@
 		<include refid="search"></include>
 	</select>
 
+	<select id="memberDetailOne" parameterType="int"
+		resultMap="memberResultMap">
+		SELECT MNO, MNAME, EMAIL, PWD, CRE_DATE
+		FROM MEMBER
+		WHERE MNO =
+		#{no}
+	</select>
 </mapper>

@@ -20,4 +20,6 @@ public interface MemberDao {
 	public void memberDeleteOne(int no);
 	
 	public int memberSelectTotalCount(String keyword, String searchOption);
+	
+	public MemberVo memberDetailOne(int no);
 }

@@ -155,4 +155,16 @@ public class MemberController {
 
 		return "redirect:/login.do";
 	}
+	
+	// 로그인 화면으로
+	@RequestMapping(value = "/member/detail.do", method = RequestMethod.GET)
+	public String memberDetail(int no, Model model) {
+		logger.info("Welcome MemberController! memberDetail no" + no);
+
+		MemberVo memberVo = memberService.memberDetailOne(no);
+
+		model.addAttribute("memberVo", memberVo);
+
+		return "member/MemberDetailForm";
+	}
 }

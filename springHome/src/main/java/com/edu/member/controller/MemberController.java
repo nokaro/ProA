@@ -21,128 +21,138 @@ import com.edu.util.Paging;
 
 @Controller
 public class MemberController {
-   private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
+	private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
 
-   @Autowired
-   private MemberService memberService;
+	@Autowired
+	private MemberService memberService;
 
-   // 로그인 화면으로
-   @RequestMapping(value = "/login.do", method = RequestMethod.GET)
-   public String login(HttpSession session, Model model) {
-      logger.info("Welcome MemberController! login");
+	// 로그인 화면으로
+	@RequestMapping(value = "/login.do", method = RequestMethod.GET)
+	public String login(HttpSession session, Model model) {
+		logger.info("Welcome MemberController! login");
 
-      return "auth/LoginForm";
-   }
+		return "auth/LoginForm";
+	}
 
-   // 로그인 버튼 클릭 시
-   @RequestMapping(value = "/loginCtr.do", method = RequestMethod.POST)
-   public String loginCtr(String email, String password, HttpSession session, Model model) {
-      logger.info("Welcome MemberController! loginCtr!" + email + ", " + password);
+	// 로그인 버튼 클릭 시
+	@RequestMapping(value = "/loginCtr.do", method = RequestMethod.POST)
+	public String loginCtr(String email, String password, HttpSession session, Model model) {
+		logger.info("Welcome MemberController! loginCtr!" + email + ", " + password);
 
-      MemberVo memberVo = memberService.memberExist(email, password);
+		MemberVo memberVo = memberService.memberExist(email, password);
 
-      if (memberVo != null) {
-         // 회원이 존재한다면 회원 전체 조회 페이지로 이동
-         session.setAttribute("member", memberVo);
+		if (memberVo != null) {
+			// 회원이 존재한다면 회원 전체 조회 페이지로 이동
+			session.setAttribute("member", memberVo);
 
-         return "redirect:/member/list.do";
-      } else {
+			return "redirect:/member/list.do";
+		} else {
 
-         return "/auth/LoginFail";
-      }
+			return "/auth/LoginFail";
+		}
 
-   }
+	}
 
-   // 로그아웃
-   @RequestMapping(value = "/logout.do", method = RequestMethod.GET)
-   public String logout(HttpSession session, Model model) {
-      logger.info("Welcome MemberController! logout");
+	// 로그아웃
+	@RequestMapping(value = "/logout.do", method = RequestMethod.GET)
+	public String logout(HttpSession session, Model model) {
+		logger.info("Welcome MemberController! logout");
 
-      session.invalidate();
+		session.invalidate();
 
-      return "redirect:/login.do";
-   }
+		return "redirect:/login.do";
+	}
 
-   // 회원목록 화면으로
-   @RequestMapping(value = "/member/list.do", method = {RequestMethod.GET, 
-         RequestMethod.POST})
-   public String memberList(@RequestParam(defaultValue = "1") int curPage,
-		   @RequestParam(defaultValue =   "") String keyword, 
-		   @RequestParam(defaultValue = "all") String searchOption, Model model) {
-      logger.info("Welcome MemberController! " + "memberList keyword: {}", keyword);
-      
-      int totalCount = memberService.memberSelectTotalCount();
+	// 회원목록 화면으로
+	@RequestMapping(value = "/member/list.do", method = { RequestMethod.GET, RequestMethod.POST })
+	public String memberList(@RequestParam(defaultValue = "1") int curPage,
+			@RequestParam(defaultValue = "") String keyword, @RequestParam(defaultValue = "all") String searchOption,
+			Model model) {
+		logger.info("Welcome MemberController! memberList searchOption : {}, " + "keyword : {}", searchOption, keyword);
 
-      // 페이지 나누기 관련 처리
-      Paging memberPaging = new Paging(totalCount, curPage);
-      int start = memberPaging.getPageBegin();
-      int end = memberPaging.getPageEnd();
-      
-      List<MemberVo> memberList = 
-            memberService.memberSelectList(searchOption, keyword, start, end);
+		int totalCount = memberService.memberSelectTotalCount(keyword, searchOption);
 
-      HashMap<String, Object> searchMap = new HashMap<String, Object>();
-      searchMap.put("searchOption", searchOption);
-      searchMap.put("keyword", keyword);
-      
-      Map<String, Object> pagingMap = new HashMap<String, Object>();
-      pagingMap.put("totalCount", totalCount);
-      pagingMap.put("memberPaging", memberPaging);
-      
-      model.addAttribute("memberList", memberList);
-      model.addAttribute("searchMap", searchMap);
-      model.addAttribute("pagingMap", pagingMap);
-   
-      return "member/MemberListView";
-   }
+		// 검색했을 때 1페이지로 넘어가게 구현
+		if ((totalCount / Paging.PAGE_SCALE) < curPage - 1) {
+			curPage = 1;
+		}
 
-   // 회원추가 화면으로
-   @RequestMapping(value = "/member/add.do", method = RequestMethod.GET)
-   public String memberAdd(Model model) {
-      logger.info("Welcome MemberController! memberAdd");
+		// 페이지 나누기 관련 처리
+		Paging memberPaging = new Paging(totalCount, curPage);
+		int start = memberPaging.getPageBegin();
+		int end = memberPaging.getPageEnd();
 
-      return "member/MemberForm";
-   }
+		List<MemberVo> memberList = memberService.memberSelectList(searchOption, keyword, start, end);
 
-   // 회원등록
-   @RequestMapping(value = "/member/addCtr.do", method = RequestMethod.POST)
-   public String memberAdd(MemberVo memberVo, Model model) {
-      logger.info("Welcome MemberController! memberAdd" + memberVo);
+		HashMap<String, Object> searchMap = new HashMap<String, Object>();
+		searchMap.put("keyword", keyword);
+		searchMap.put("searchOption", searchOption);
 
-      memberService.memberInsertOne(memberVo);
+		Map<String, Object> pagingMap = new HashMap<String, Object>();
+		pagingMap.put("totalCount", totalCount);
+		pagingMap.put("memberPaging", memberPaging);
 
-      return "redirect:/member/list.do";
-   }
+		model.addAttribute("memberList", memberList);
+		model.addAttribute("searchMap", searchMap);
+		model.addAttribute("pagingMap", pagingMap);
 
-   // 회원수정 화면으로
-   @RequestMapping(value = "/member/update.do", method = RequestMethod.GET)
-   public String memberUpdate(int no, Model model) {
-      logger.info("Welcome MemberController! memberUpdate no" + no);
+		return "member/MemberListView";
+	}
 
-      MemberVo memberVo = memberService.memberSelectOne(no);
+	// 회원추가 화면으로
+	@RequestMapping(value = "/member/add.do", method = RequestMethod.GET)
+	public String memberAdd(Model model) {
+		logger.info("Welcome MemberController! memberAdd");
 
-      model.addAttribute("memberVo", memberVo);
+		return "member/MemberForm";
+	}
 
-      return "member/MemberUpdateForm";
-   }
+	// 회원등록
+	@RequestMapping(value = "/member/addCtr.do", method = RequestMethod.POST)
+	public String memberAdd(MemberVo memberVo, Model model) {
+		logger.info("Welcome MemberController! memberAdd" + memberVo);
 
-   // 회원수정
-   @RequestMapping(value = "/member/updateCtr.do", method = RequestMethod.POST)
-   public String memberUpdate(MemberVo memberVo, Model model) {
-      logger.info("Welcome MemberController! memberUpdateCtr" + memberVo);
+		memberService.memberInsertOne(memberVo);
 
-      memberService.memberUpdateOne(memberVo);
+		return "redirect:/login.do";
+	}
 
-      return "redirect:/member/list.do";
-   }
+	// 회원수정 화면으로
+	@RequestMapping(value = "/member/update.do", method = RequestMethod.GET)
+	public String memberUpdate(int no, Model model) {
+		logger.info("Welcome MemberController! memberUpdate no" + no);
 
-   // 회원탈퇴
-   @RequestMapping(value = "/member/deleteCtr.do", method = RequestMethod.GET)
-   public String memberDeleteCtr(int no, Model model) {
-      logger.info("Welcome MemberController! memberDeleteCtr no: " + no);
+		MemberVo memberVo = memberService.memberSelectOne(no);
 
-      memberService.memberDeleteOne(no);
+		model.addAttribute("memberVo", memberVo);
 
-      return "redirect:/member/list.do";
-   }
+		return "member/MemberUpdateForm";
+	}
+
+	// 회원수정
+	@RequestMapping(value = "/member/updateCtr.do", method = RequestMethod.POST)
+	public String memberUpdate(HttpSession session, MemberVo memberVo, Model model) {
+		logger.info("Welcome MemberController! memberUpdateCtr" + memberVo);
+
+		memberService.memberUpdateOne(memberVo);
+
+		if (session.getAttribute("member") != null) {
+			MemberVo tempVo = (MemberVo) session.getAttribute("member");
+			if (memberVo.getNo() == tempVo.getNo()) {
+				session.setAttribute("member", 
+						memberService.memberSelectOne(memberVo.getNo()));
+			}
+		}
+		return "redirect:/member/list.do";
+	}
+
+	// 회원탈퇴
+	@RequestMapping(value = "/member/deleteCtr.do", method = RequestMethod.GET)
+	public String memberDeleteCtr(int no, Model model) {
+		logger.info("Welcome MemberController! memberDeleteCtr no: " + no);
+
+		memberService.memberDeleteOne(no);
+
+		return "redirect:/login.do";
+	}
 }
